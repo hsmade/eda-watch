@@ -2437,7 +2437,7 @@
 // <e> NRFX_PPI_ENABLED - nrfx_ppi - PPI peripheral allocator
 //==========================================================
 #ifndef NRFX_PPI_ENABLED
-#define NRFX_PPI_ENABLED 0
+#define NRFX_PPI_ENABLED 1
 #endif
 // <e> NRFX_PPI_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
@@ -3239,7 +3239,7 @@
 // <e> NRFX_SAADC_ENABLED - nrfx_saadc - SAADC peripheral driver
 //==========================================================
 #ifndef NRFX_SAADC_ENABLED
-#define NRFX_SAADC_ENABLED 0
+#define NRFX_SAADC_ENABLED 1
 #endif
 // <o> NRFX_SAADC_CONFIG_RESOLUTION  - Resolution
  
@@ -3249,7 +3249,7 @@
 // <3=> 14 bit 
 
 #ifndef NRFX_SAADC_CONFIG_RESOLUTION
-#define NRFX_SAADC_CONFIG_RESOLUTION 1
+#define NRFX_SAADC_CONFIG_RESOLUTION 2
 #endif
 
 // <o> NRFX_SAADC_CONFIG_OVERSAMPLE  - Sample period
@@ -4740,7 +4740,7 @@
  
 
 #ifndef PPI_ENABLED
-#define PPI_ENABLED 0
+#define PPI_ENABLED 1
 #endif
 
 // <e> PWM_ENABLED - nrf_drv_pwm - PWM peripheral driver - legacy layer
@@ -5208,7 +5208,7 @@
 // <e> SAADC_ENABLED - nrf_drv_saadc - SAADC peripheral driver - legacy layer
 //==========================================================
 #ifndef SAADC_ENABLED
-#define SAADC_ENABLED 0
+#define SAADC_ENABLED 1
 #endif
 // <o> SAADC_CONFIG_RESOLUTION  - Resolution
  
@@ -5258,7 +5258,7 @@
 // <7=> 7 
 
 #ifndef SAADC_CONFIG_IRQ_PRIORITY
-#define SAADC_CONFIG_IRQ_PRIORITY 6
+#define SAADC_CONFIG_IRQ_PRIORITY 7
 #endif
 
 // </e>
@@ -8385,7 +8385,7 @@
 // <e> SAADC_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef SAADC_CONFIG_LOG_ENABLED
-#define SAADC_CONFIG_LOG_ENABLED 0
+#define SAADC_CONFIG_LOG_ENABLED 1
 #endif
 // <o> SAADC_CONFIG_LOG_LEVEL  - Default Severity level
  
@@ -8396,7 +8396,7 @@
 // <4=> Debug 
 
 #ifndef SAADC_CONFIG_LOG_LEVEL
-#define SAADC_CONFIG_LOG_LEVEL 3
+#define SAADC_CONFIG_LOG_LEVEL 4
 #endif
 
 // <o> SAADC_CONFIG_INFO_COLOR  - ANSI escape code prefix.
