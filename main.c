@@ -97,6 +97,7 @@ static nrf_ppi_channel_t       m_ppi_channel;
 static uint32_t                m_adc_evt_counter;
 
 #define ADC_RES_12BIT 65535
+#define ADC_RES_10BIT 1024
 #define ADC_REF_VOLTAGE_IN_MILLIVOLTS   600                                     /**< Reference voltage (in milli volts) used by ADC while doing conversion. */
 #define ADC_PRE_SCALING_COMPENSATION    6                                       /**< The ADC is configured to use VDD with 1/3 prescaling as input. And hence the result of conversion is to be multiplied by 3 to get the actual value of the battery voltage.*/
 #define DIODE_FWD_VOLT_DROP_MILLIVOLTS  270                                     /**< Typical forward voltage drop of the diode . */
@@ -108,11 +109,11 @@ static uint32_t                m_adc_evt_counter;
  * @retval     Result converted to millivolts.
  */
 #define ADC_RESULT_IN_MILLI_VOLTS(ADC_VALUE)\
-        ((((ADC_VALUE) * ADC_REF_VOLTAGE_IN_MILLIVOLTS) / ADC_RES_12BIT) * ADC_PRE_SCALING_COMPENSATION)
+        ((((ADC_VALUE) * ADC_REF_VOLTAGE_IN_MILLIVOLTS) / ADC_RES_10BIT) * ADC_PRE_SCALING_COMPENSATION)
 // SAADC END
 
 
-#define DEVICE_NAME                         "Nordic_HRM"                            /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                         "EDA"                            /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME                   "NordicSemiconductor"                   /**< Manufacturer. Will be passed to Device Information Service. */
 
 #define APP_BLE_OBSERVER_PRIO               3                                       /**< Application's BLE observer priority. You shouldn't need to modify this value. */
@@ -121,10 +122,10 @@ static uint32_t                m_adc_evt_counter;
 #define APP_ADV_INTERVAL                    300                                     /**< The advertising interval (in units of 0.625 ms. This value corresponds to 187.5 ms). */
 #define APP_ADV_DURATION                    18000                                       /**< The advertising duration (180 seconds) in units of 10 milliseconds. */
 
-#define BATTERY_LEVEL_MEAS_INTERVAL         2000                                    /**< Battery level measurement interval (ms). */
-#define MIN_BATTERY_LEVEL                   81                                      /**< Minimum simulated battery level. */
-#define MAX_BATTERY_LEVEL                   100                                     /**< Maximum simulated battery level. */
-#define BATTERY_LEVEL_INCREMENT             1                                       /**< Increment between each simulated battery level measurement. */
+//#define BATTERY_LEVEL_MEAS_INTERVAL         2000                                    /**< Battery level measurement interval (ms). */
+//#define MIN_BATTERY_LEVEL                   81                                      /**< Minimum simulated battery level. */
+//#define MAX_BATTERY_LEVEL                   100                                     /**< Maximum simulated battery level. */
+//#define BATTERY_LEVEL_INCREMENT             1                                       /**< Increment between each simulated battery level measurement. */
 
 #define HEART_RATE_MEAS_INTERVAL            1000                                    /**< Heart rate measurement interval (ms). */
 #define MIN_HEART_RATE                      140                                     /**< Minimum heart rate as returned by the simulated measurement function. */
@@ -170,8 +171,8 @@ BLE_ADVERTISING_DEF(m_advertising);                                 /**< Adverti
 static uint16_t m_conn_handle         = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 static bool     m_rr_interval_enabled = true;                       /**< Flag for enabling and disabling the registration of new RR interval measurements (the purpose of disabling this is just to test sending HRM without RR interval data. */
 
-static sensorsim_cfg_t   m_battery_sim_cfg;                         /**< Battery Level sensor simulator configuration. */
-static sensorsim_state_t m_battery_sim_state;                       /**< Battery Level sensor simulator state. */
+//static sensorsim_cfg_t   m_battery_sim_cfg;                         /**< Battery Level sensor simulator configuration. */
+//static sensorsim_state_t m_battery_sim_state;                       /**< Battery Level sensor simulator state. */
 static sensorsim_cfg_t   m_heart_rate_sim_cfg;                      /**< Heart Rate sensor simulator configuration. */
 static sensorsim_state_t m_heart_rate_sim_state;                    /**< Heart Rate sensor simulator state. */
 static sensorsim_cfg_t   m_rr_interval_sim_cfg;                     /**< RR Interval sensor simulator configuration. */
@@ -184,7 +185,7 @@ static ble_uuid_t m_adv_uuids[] =                                   /**< Univers
     {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE}
 };
 
-static TimerHandle_t m_battery_timer;                               /**< Definition of battery timer. */
+//static TimerHandle_t m_battery_timer;                               /**< Definition of battery timer. */
 static TimerHandle_t m_heart_rate_timer;                            /**< Definition of heart rate timer. */
 static TimerHandle_t m_rr_interval_timer;                           /**< Definition of RR interval timer. */
 static TimerHandle_t m_sensor_contact_timer;                        /**< Definition of sensor contact detected timer. */
@@ -239,14 +240,14 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
 /**@brief Function for performing battery measurement and updating the Battery Level characteristic
  *        in Battery Service.
  */
-static void battery_level_update(void)
+static void battery_level_update(uint8_t value)
 {
     ret_code_t err_code;
-    uint8_t  battery_level;
+//    uint8_t  battery_level;
 
-    battery_level = (uint8_t)sensorsim_measure(&m_battery_sim_state, &m_battery_sim_cfg);
+//    battery_level = (uint8_t)sensorsim_measure(&m_battery_sim_state, &m_battery_sim_cfg);
 
-    err_code = ble_bas_battery_level_update(&m_bas, battery_level, BLE_CONN_HANDLE_ALL);
+    err_code = ble_bas_battery_level_update(&m_bas, value, BLE_CONN_HANDLE_ALL);
     if ((err_code != NRF_SUCCESS) &&
         (err_code != NRF_ERROR_INVALID_STATE) &&
         (err_code != NRF_ERROR_RESOURCES) &&
@@ -266,11 +267,11 @@ static void battery_level_update(void)
  * @param[in] xTimer Handler to the timer that called this function.
  *                   You may get identifier given to the function xTimerCreate using pvTimerGetTimerID.
  */
-static void battery_level_meas_timeout_handler(TimerHandle_t xTimer)
-{
-    UNUSED_PARAMETER(xTimer);
-    battery_level_update();
-}
+//static void battery_level_meas_timeout_handler(TimerHandle_t xTimer)
+//{
+//    UNUSED_PARAMETER(xTimer);
+//    battery_level_update(0);
+//}
 
 
 /**@brief Function for handling the Heart rate measurement timer time-out.
@@ -361,11 +362,11 @@ static void timers_init(void)
     APP_ERROR_CHECK(err_code);
 
     // Create timers.
-    m_battery_timer = xTimerCreate("BATT",
-                                   BATTERY_LEVEL_MEAS_INTERVAL,
-                                   pdTRUE,
-                                   NULL,
-                                   battery_level_meas_timeout_handler);
+//    m_battery_timer = xTimerCreate("BATT",
+//                                   BATTERY_LEVEL_MEAS_INTERVAL,
+//                                   pdTRUE,
+//                                   NULL,
+//                                   battery_level_meas_timeout_handler);
     m_heart_rate_timer = xTimerCreate("HRT",
                                       HEART_RATE_MEAS_INTERVAL,
                                       pdTRUE,
@@ -383,8 +384,8 @@ static void timers_init(void)
                                           sensor_contact_detected_timeout_handler);
 
     /* Error checking */
-    if ( (NULL == m_battery_timer)
-         || (NULL == m_heart_rate_timer)
+//    if ( (NULL == m_battery_timer)
+    if ( (NULL == m_heart_rate_timer)
          || (NULL == m_rr_interval_timer)
          || (NULL == m_sensor_contact_timer) )
     {
@@ -513,12 +514,12 @@ static void services_init(void)
 /**@brief Function for initializing the sensor simulators. */
 static void sensor_simulator_init(void)
 {
-    m_battery_sim_cfg.min          = MIN_BATTERY_LEVEL;
-    m_battery_sim_cfg.max          = MAX_BATTERY_LEVEL;
-    m_battery_sim_cfg.incr         = BATTERY_LEVEL_INCREMENT;
-    m_battery_sim_cfg.start_at_max = true;
-
-    sensorsim_init(&m_battery_sim_state, &m_battery_sim_cfg);
+//    m_battery_sim_cfg.min          = MIN_BATTERY_LEVEL;
+//    m_battery_sim_cfg.max          = MAX_BATTERY_LEVEL;
+//    m_battery_sim_cfg.incr         = BATTERY_LEVEL_INCREMENT;
+//    m_battery_sim_cfg.start_at_max = true;
+//
+//    sensorsim_init(&m_battery_sim_state, &m_battery_sim_cfg);
 
     m_heart_rate_sim_cfg.min          = MIN_HEART_RATE;
     m_heart_rate_sim_cfg.max          = MAX_HEART_RATE;
@@ -542,10 +543,10 @@ static void sensor_simulator_init(void)
 static void application_timers_start(void)
 {
     // Start application timers.
-    if (pdPASS != xTimerStart(m_battery_timer, OSTIMER_WAIT_FOR_QUEUE))
-    {
-        APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
-    }
+//    if (pdPASS != xTimerStart(m_battery_timer, OSTIMER_WAIT_FOR_QUEUE))
+//    {
+//        APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
+//    }
     if (pdPASS != xTimerStart(m_heart_rate_timer, OSTIMER_WAIT_FOR_QUEUE))
     {
         APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
@@ -999,43 +1000,24 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
         uint16_t adc_value;
         uint8_t value[SAADC_SAMPLES_IN_BUFFER*2];
         uint8_t bytes_to_send;
+        uint16_t eda;
+        uint8_t battery;
      
         // set buffers
         err_code = nrf_drv_saadc_buffer_convert(p_event->data.done.p_buffer, SAADC_SAMPLES_IN_BUFFER);
         APP_ERROR_CHECK(err_code);
 						
-        // print samples on hardware UART and parse data for BLE transmission
         NRF_LOG_INFO("ADC event number: %d\r\n",(int)m_adc_evt_counter);
-        for (int i = 0; i < SAADC_SAMPLES_IN_BUFFER; i++)
-        {
-            NRF_LOG_INFO("%d\r\n", p_event->data.done.p_buffer[i]);
+        NRF_LOG_INFO("raw eda: %d\r\n", p_event->data.done.p_buffer[0]);
+        NRF_LOG_INFO("raw batt: %d\r\n", p_event->data.done.p_buffer[1]);
 
-            adc_value = p_event->data.done.p_buffer[i];
-            NRF_LOG_INFO("SAADC Value: %d", adc_value);
-            NRF_LOG_INFO("SAADC mV: %d", ADC_RESULT_IN_MILLI_VOLTS(adc_value) + DIODE_FWD_VOLT_DROP_MILLIVOLTS);
+        eda = p_event->data.done.p_buffer[0];
+        NRF_LOG_INFO("batt mv: %d", ADC_RESULT_IN_MILLI_VOLTS(p_event->data.done.p_buffer[1]) + DIODE_FWD_VOLT_DROP_MILLIVOLTS);
+        battery = battery_level_in_percent(ADC_RESULT_IN_MILLI_VOLTS(p_event->data.done.p_buffer[1]) + DIODE_FWD_VOLT_DROP_MILLIVOLTS);
+        battery_level_update(battery);
 
-            value[i*2] = adc_value;
-            value[(i*2)+1] = adc_value >> 8;
-        }
+        NRF_LOG_INFO("batt: %d%%", battery);
 				
-        // Send data over BLE via NUS service. Makes sure not to send more than 20 bytes.
-        if((SAADC_SAMPLES_IN_BUFFER*2) <= 20) 
-        {
-            bytes_to_send = (SAADC_SAMPLES_IN_BUFFER*2);
-        }
-        else 
-        {
-            bytes_to_send = 20;
-        }
-
-        // value
-//        err_code = ble_nus_string_send(&m_nus, value, bytes_to_send);
-
-//        if (err_code != NRF_ERROR_INVALID_STATE) 
-//        {
-//            APP_ERROR_CHECK(err_code);
-//        }
-						
         m_adc_evt_counter++;
     }
 }
@@ -1045,7 +1027,7 @@ void saadc_init(void)
     ret_code_t err_code;
 	
     nrf_drv_saadc_config_t saadc_config = NRF_DRV_SAADC_DEFAULT_CONFIG;
-    saadc_config.resolution = NRF_SAADC_RESOLUTION_12BIT;
+    saadc_config.resolution = NRF_SAADC_RESOLUTION_10BIT;
 	
     nrf_saadc_channel_config_t channel_0_config =
         NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_AIN3);
