@@ -34,6 +34,9 @@
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
+#include "ble.h"
+
+#include "eda.h"
 
 // SAADC START
 #include "nrf_soc.h"
@@ -47,7 +50,8 @@ static nrf_saadc_value_t       m_buffer_pool[2][SAADC_SAMPLES_IN_BUFFER];
 static nrf_ppi_channel_t       m_ppi_channel;
 static uint32_t                m_adc_evt_counter;
 
-#define ADC_RES_12BIT                       65535
+#define ADC_RES_14BIT                       8196
+#define ADC_RES_12BIT                       4096
 #define ADC_RES_10BIT                       1024
 #define ADC_REF_VOLTAGE_IN_MILLIVOLTS       600                                     /**< Reference voltage (in milli volts) used by ADC while doing conversion. */
 #define ADC_PRE_SCALING_COMPENSATION        6                                       /**< The ADC is configured to use VDD with 1/3 prescaling as input. And hence the result of conversion is to be multiplied by 3 to get the actual value of the battery voltage.*/
@@ -109,6 +113,7 @@ static uint32_t                m_adc_evt_counter;
 
 
 BLE_BAS_DEF(m_bas);                                                 /**< Battery service instance. */
+BLE_EDA_DEF(m_eda);                                                 /**< Eda service instance. */
 BLE_HRS_DEF(m_hrs);                                                 /**< Heart rate service instance. */
 NRF_BLE_GATT_DEF(m_gatt);                                           /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);                                             /**< Context for the Queued Write module.*/
@@ -179,6 +184,27 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
             break;
     }
 }
+
+
+/**@brief Function for performing eda measurement and updating the eda Level characteristic
+ *        in eda Service.
+ */
+static void eda_level_update(uint8_t value)
+{
+    ret_code_t err_code;
+
+    err_code = ble_eda_level_update(&m_eda, value, BLE_CONN_HANDLE_ALL);
+    if ((err_code != NRF_SUCCESS) &&
+        (err_code != NRF_ERROR_INVALID_STATE) &&
+        (err_code != NRF_ERROR_RESOURCES) &&
+        (err_code != NRF_ERROR_BUSY) &&
+        (err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)
+       )
+    {
+        APP_ERROR_HANDLER(err_code);
+    }
+}
+
 
 
 /**@brief Function for performing battery measurement and updating the Battery Level characteristic
@@ -378,6 +404,7 @@ static void services_init(void)
     ret_code_t         err_code;
     ble_hrs_init_t     hrs_init;
     ble_bas_init_t     bas_init;
+    ble_eda_init_t     eda_init;
     ble_dis_init_t     dis_init;
     nrf_ble_qwr_init_t qwr_init = {0};
     uint8_t            body_sensor_location;
@@ -418,6 +445,22 @@ static void services_init(void)
     bas_init.initial_batt_level   = 100;
 
     err_code = ble_bas_init(&m_bas, &bas_init);
+    APP_ERROR_CHECK(err_code);
+
+    // Initialize Eda Service.
+    memset(&eda_init, 0, sizeof(eda_init));
+
+    // Here the sec level for the Eda Service can be changed/increased.
+    eda_init.bl_rd_sec        = SEC_OPEN;
+    eda_init.bl_cccd_wr_sec   = SEC_OPEN;
+    eda_init.bl_report_rd_sec = SEC_OPEN;
+
+    eda_init.evt_handler          = NULL;
+    eda_init.support_notification = true;
+    eda_init.p_report_ref         = NULL;
+    eda_init.initial_level   = 100;
+
+    err_code = ble_eda_init(&m_eda, &eda_init);
     APP_ERROR_CHECK(err_code);
 
     // Initialize Device Information Service.
@@ -910,7 +953,7 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
         uint16_t adc_value;
         uint8_t value[SAADC_SAMPLES_IN_BUFFER*2];
         uint8_t bytes_to_send;
-        uint16_t eda;
+        uint8_t eda;
         uint8_t battery;
      
         // set buffers
@@ -922,6 +965,8 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
         NRF_LOG_INFO("raw batt: %d\r\n", p_event->data.done.p_buffer[1]);
 
         eda = p_event->data.done.p_buffer[0];
+        eda_level_update(eda);
+
         NRF_LOG_INFO("batt mv: %d", ADC_RESULT_IN_MILLI_VOLTS(p_event->data.done.p_buffer[1]) + DIODE_FWD_VOLT_DROP_MILLIVOLTS);
         battery = battery_level_in_percent(ADC_RESULT_IN_MILLI_VOLTS(p_event->data.done.p_buffer[1]) + DIODE_FWD_VOLT_DROP_MILLIVOLTS);
         battery_level_update(battery);
@@ -937,7 +982,7 @@ void saadc_init(void)
     ret_code_t err_code;
 	
     nrf_drv_saadc_config_t saadc_config = NRF_DRV_SAADC_DEFAULT_CONFIG;
-    saadc_config.resolution = NRF_SAADC_RESOLUTION_10BIT;
+    saadc_config.resolution = NRF_SAADC_RESOLUTION_12BIT;
 	
     nrf_saadc_channel_config_t channel_0_config =
         NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_AIN3);
@@ -995,6 +1040,7 @@ int main(void)
     // Initialize modules.
     timers_init();
     buttons_leds_init(&erase_bonds);
+
     gap_params_init();
     gatt_init();
     advertising_init();

@@ -111,6 +111,8 @@
     <folder Name="Application">
       <file file_name="main.c" />
       <file file_name="sdk_config.h" />
+      <file file_name="eda.c" />
+      <file file_name="eda.h" />
     </folder>
     <folder Name="nRF_Segger_RTT">
       <file file_name="/Users/wifournier/Documents/nRF5_SDK_15.2.0_9412b96/external/segger_rtt/SEGGER_RTT.c" />

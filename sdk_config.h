@@ -12413,6 +12413,20 @@
 #define BLE_BAS_C_BLE_OBSERVER_PRIO 2
 #endif
 
+// <o> BLE_EDA_BLE_OBSERVER_PRIO  
+// <i> Priority with which BLE events are dispatched to the Eda Service.
+
+#ifndef BLE_EDA_BLE_OBSERVER_PRIO
+#define BLE_EDA_BLE_OBSERVER_PRIO 2
+#endif
+
+// <o> BLE_EDAS_C_BLE_OBSERVER_PRIO  
+// <i> Priority with which BLE events are dispatched to the Eda Service Client.
+
+#ifndef BLE_EDA_C_BLE_OBSERVER_PRIO
+#define BLE_EDA_C_BLE_OBSERVER_PRIO 2
+#endif
+
 // <o> BLE_BPS_BLE_OBSERVER_PRIO  
 // <i> Priority with which BLE events are dispatched to the Blood Pressure Service.
 
