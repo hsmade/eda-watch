@@ -1,52 +1,3 @@
-/**
- * Copyright (c) 2014 - 2018, Nordic Semiconductor ASA
- *
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
- *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
- *    contributors may be used to endorse or promote products derived from this
- *    software without specific prior written permission.
- *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- */
-// Board/nrf6310/ble/ble_app_hrs_rtx/main.c
-/**
- *
- * @brief Heart Rate Service Sample Application with RTX main file.
- *
- * This file contains the source code for a sample application using RTX and the
- * Heart Rate service (and also Battery and Device Information services).
- * This application uses the @ref srvlib_conn_params module.
- */
-
 #include <stdint.h>
 #include <string.h>
 #include "nordic_common.h"
@@ -89,18 +40,18 @@
 #include "nrf_drv_saadc.h"
 #include "nrf_drv_ppi.h"
 #include "nrf_drv_timer.h"
-#define SAADC_SAMPLES_IN_BUFFER         2
-#define SAADC_SAMPLE_RATE		        1000                                         /**< SAADC sample rate in ms. */               
+#define SAADC_SAMPLES_IN_BUFFER             2
+#define SAADC_SAMPLE_RATE		    1000                                         /**< SAADC sample rate in ms. */               
 static const nrf_drv_timer_t   m_timer = NRF_DRV_TIMER_INSTANCE(1);
 static nrf_saadc_value_t       m_buffer_pool[2][SAADC_SAMPLES_IN_BUFFER];
 static nrf_ppi_channel_t       m_ppi_channel;
 static uint32_t                m_adc_evt_counter;
 
-#define ADC_RES_12BIT 65535
-#define ADC_RES_10BIT 1024
-#define ADC_REF_VOLTAGE_IN_MILLIVOLTS   600                                     /**< Reference voltage (in milli volts) used by ADC while doing conversion. */
-#define ADC_PRE_SCALING_COMPENSATION    6                                       /**< The ADC is configured to use VDD with 1/3 prescaling as input. And hence the result of conversion is to be multiplied by 3 to get the actual value of the battery voltage.*/
-#define DIODE_FWD_VOLT_DROP_MILLIVOLTS  270                                     /**< Typical forward voltage drop of the diode . */
+#define ADC_RES_12BIT                       65535
+#define ADC_RES_10BIT                       1024
+#define ADC_REF_VOLTAGE_IN_MILLIVOLTS       600                                     /**< Reference voltage (in milli volts) used by ADC while doing conversion. */
+#define ADC_PRE_SCALING_COMPENSATION        6                                       /**< The ADC is configured to use VDD with 1/3 prescaling as input. And hence the result of conversion is to be multiplied by 3 to get the actual value of the battery voltage.*/
+#define DIODE_FWD_VOLT_DROP_MILLIVOLTS      270                                     /**< Typical forward voltage drop of the diode . */
 
 /**@brief Macro to convert the result of ADC conversion in millivolts.
  *
@@ -121,11 +72,6 @@ static uint32_t                m_adc_evt_counter;
 
 #define APP_ADV_INTERVAL                    300                                     /**< The advertising interval (in units of 0.625 ms. This value corresponds to 187.5 ms). */
 #define APP_ADV_DURATION                    18000                                       /**< The advertising duration (180 seconds) in units of 10 milliseconds. */
-
-//#define BATTERY_LEVEL_MEAS_INTERVAL         2000                                    /**< Battery level measurement interval (ms). */
-//#define MIN_BATTERY_LEVEL                   81                                      /**< Minimum simulated battery level. */
-//#define MAX_BATTERY_LEVEL                   100                                     /**< Maximum simulated battery level. */
-//#define BATTERY_LEVEL_INCREMENT             1                                       /**< Increment between each simulated battery level measurement. */
 
 #define HEART_RATE_MEAS_INTERVAL            1000                                    /**< Heart rate measurement interval (ms). */
 #define MIN_HEART_RATE                      140                                     /**< Minimum heart rate as returned by the simulated measurement function. */
@@ -171,8 +117,6 @@ BLE_ADVERTISING_DEF(m_advertising);                                 /**< Adverti
 static uint16_t m_conn_handle         = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 static bool     m_rr_interval_enabled = true;                       /**< Flag for enabling and disabling the registration of new RR interval measurements (the purpose of disabling this is just to test sending HRM without RR interval data. */
 
-//static sensorsim_cfg_t   m_battery_sim_cfg;                         /**< Battery Level sensor simulator configuration. */
-//static sensorsim_state_t m_battery_sim_state;                       /**< Battery Level sensor simulator state. */
 static sensorsim_cfg_t   m_heart_rate_sim_cfg;                      /**< Heart Rate sensor simulator configuration. */
 static sensorsim_state_t m_heart_rate_sim_state;                    /**< Heart Rate sensor simulator state. */
 static sensorsim_cfg_t   m_rr_interval_sim_cfg;                     /**< RR Interval sensor simulator configuration. */
@@ -243,9 +187,6 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
 static void battery_level_update(uint8_t value)
 {
     ret_code_t err_code;
-//    uint8_t  battery_level;
-
-//    battery_level = (uint8_t)sensorsim_measure(&m_battery_sim_state, &m_battery_sim_cfg);
 
     err_code = ble_bas_battery_level_update(&m_bas, value, BLE_CONN_HANDLE_ALL);
     if ((err_code != NRF_SUCCESS) &&
@@ -258,20 +199,6 @@ static void battery_level_update(uint8_t value)
         APP_ERROR_HANDLER(err_code);
     }
 }
-
-
-/**@brief Function for handling the Battery measurement timer time-out.
- *
- * @details This function will be called each time the battery level measurement timer expires.
- *
- * @param[in] xTimer Handler to the timer that called this function.
- *                   You may get identifier given to the function xTimerCreate using pvTimerGetTimerID.
- */
-//static void battery_level_meas_timeout_handler(TimerHandle_t xTimer)
-//{
-//    UNUSED_PARAMETER(xTimer);
-//    battery_level_update(0);
-//}
 
 
 /**@brief Function for handling the Heart rate measurement timer time-out.
@@ -362,11 +289,6 @@ static void timers_init(void)
     APP_ERROR_CHECK(err_code);
 
     // Create timers.
-//    m_battery_timer = xTimerCreate("BATT",
-//                                   BATTERY_LEVEL_MEAS_INTERVAL,
-//                                   pdTRUE,
-//                                   NULL,
-//                                   battery_level_meas_timeout_handler);
     m_heart_rate_timer = xTimerCreate("HRT",
                                       HEART_RATE_MEAS_INTERVAL,
                                       pdTRUE,
@@ -384,7 +306,6 @@ static void timers_init(void)
                                           sensor_contact_detected_timeout_handler);
 
     /* Error checking */
-//    if ( (NULL == m_battery_timer)
     if ( (NULL == m_heart_rate_timer)
          || (NULL == m_rr_interval_timer)
          || (NULL == m_sensor_contact_timer) )
@@ -514,13 +435,6 @@ static void services_init(void)
 /**@brief Function for initializing the sensor simulators. */
 static void sensor_simulator_init(void)
 {
-//    m_battery_sim_cfg.min          = MIN_BATTERY_LEVEL;
-//    m_battery_sim_cfg.max          = MAX_BATTERY_LEVEL;
-//    m_battery_sim_cfg.incr         = BATTERY_LEVEL_INCREMENT;
-//    m_battery_sim_cfg.start_at_max = true;
-//
-//    sensorsim_init(&m_battery_sim_state, &m_battery_sim_cfg);
-
     m_heart_rate_sim_cfg.min          = MIN_HEART_RATE;
     m_heart_rate_sim_cfg.max          = MAX_HEART_RATE;
     m_heart_rate_sim_cfg.incr         = HEART_RATE_INCREMENT;
@@ -543,10 +457,6 @@ static void sensor_simulator_init(void)
 static void application_timers_start(void)
 {
     // Start application timers.
-//    if (pdPASS != xTimerStart(m_battery_timer, OSTIMER_WAIT_FOR_QUEUE))
-//    {
-//        APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
-//    }
     if (pdPASS != xTimerStart(m_heart_rate_timer, OSTIMER_WAIT_FOR_QUEUE))
     {
         APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
@@ -1036,20 +946,7 @@ void saadc_init(void)
 	
     nrf_saadc_channel_config_t channel_1_config =
         NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_VDD);
-//    channel_1_config.gain = NRF_SAADC_GAIN1_6;
-//    channel_1_config.reference = NRF_SAADC_REFERENCE_INTERNAL;
 
-//	
-//    nrf_saadc_channel_config_t channel_2_config =
-//        NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_AIN3);
-//    channel_2_config.gain = NRF_SAADC_GAIN1_4;
-//    channel_2_config.reference = NRF_SAADC_REFERENCE_VDD4;
-//	
-//    nrf_saadc_channel_config_t channel_3_config =
-//        NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_AIN3);
-//    channel_3_config.gain = NRF_SAADC_GAIN1_4;
-//    channel_3_config.reference = NRF_SAADC_REFERENCE_VDD4;				
-//	
     err_code = nrf_drv_saadc_init(&saadc_config, saadc_callback);
     APP_ERROR_CHECK(err_code);
     // nrf_saadc_oversample_set(NRF_SAADC_OVERSAMPLE_8X);  // BUG: Breaks
@@ -1058,11 +955,6 @@ void saadc_init(void)
     APP_ERROR_CHECK(err_code);
     err_code = nrf_drv_saadc_channel_init(1, &channel_1_config);
     APP_ERROR_CHECK(err_code);
-//    err_code = nrf_drv_saadc_channel_init(2, &channel_2_config);
-//    APP_ERROR_CHECK(err_code);
-//    err_code = nrf_drv_saadc_channel_init(3, &channel_3_config);
-//    APP_ERROR_CHECK(err_code);	
-//
     err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[0],SAADC_SAMPLES_IN_BUFFER);
     APP_ERROR_CHECK(err_code);   
     err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[1],SAADC_SAMPLES_IN_BUFFER);
