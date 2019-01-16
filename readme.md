@@ -1,5 +1,6 @@
 # eda watch
 A smart watch that registers skin resistance: [eda](https://en.wikipedia.org/wiki/Electrodermal_activity).
+It's based on a NRF 52840 SoC with minimal added components.
 
 ## bluetooth services
 ### battery
