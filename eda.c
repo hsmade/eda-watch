@@ -15,6 +15,15 @@
 #include "nrf_log.h"
 NRF_LOG_MODULE_REGISTER();
 
+uint8_t* int16_to_array_8(uint16_t value) 
+{
+    static uint8_t data[2];
+    data[0] = (uint8_t)(value >> 8);
+    data[1] = (uint8_t)(value);
+    return data;
+}
+
+
 /**@brief Function for handling the Write event.
  *
  * @param[in]   p_eda       Eda Service structure.
@@ -89,18 +98,20 @@ static ret_code_t eda_level_char_add(ble_eda_t * p_eda, const ble_eda_init_t * p
     ret_code_t             err_code;
     ble_add_char_params_t  add_char_params;
     ble_add_descr_params_t add_descr_params;
-    uint8_t                initial_eda_level;
+    uint16_t               initial_eda_level;
     uint8_t                init_len;
     uint8_t                encoded_report_ref[BLE_SRV_ENCODED_REPORT_REF_LEN];
+    uint8_t                *data;
 
     // Add eda level characteristic
     initial_eda_level = p_eda_init->initial_level;
+    data = int16_to_array_8(initial_eda_level);
 
     memset(&add_char_params, 0, sizeof(add_char_params));
     add_char_params.uuid              = BLE_UUID_EDA_CHAR_VALUE_UUID;
-    add_char_params.max_len           = sizeof(uint8_t);
-    add_char_params.init_len          = sizeof(uint8_t);
-    add_char_params.p_init_value      = &initial_eda_level;
+    add_char_params.max_len           = sizeof(uint16_t);
+    add_char_params.init_len          = sizeof(uint16_t);
+    add_char_params.p_init_value      = data;
     add_char_params.char_props.notify = p_eda->is_notification_supported;
     add_char_params.char_props.read   = 1;
     add_char_params.cccd_write_access = p_eda_init->bl_cccd_wr_sec;
@@ -193,7 +204,7 @@ static ret_code_t eda_notification_send(ble_gatts_hvx_params_t * const p_hvx_par
 
 
 ret_code_t ble_eda_level_update(ble_eda_t * p_eda,
-                                        uint8_t    eda_level,
+                                        uint16_t    eda_level,
                                         uint16_t    conn_handle)
 {
     if (p_eda == NULL)
@@ -203,6 +214,8 @@ ret_code_t ble_eda_level_update(ble_eda_t * p_eda,
 
     ret_code_t         err_code = NRF_SUCCESS;
     ble_gatts_value_t  gatts_value;
+    uint8_t *data = int16_to_array_8(eda_level);
+
 
     if (eda_level != p_eda->eda_level_last)
     {
@@ -211,7 +224,7 @@ ret_code_t ble_eda_level_update(ble_eda_t * p_eda,
 
         gatts_value.len     = sizeof(uint16_t);
         gatts_value.offset  = 0;
-        gatts_value.p_value = &eda_level;
+        gatts_value.p_value = data;
 
         // Update dataedae.
         err_code = sd_ble_gatts_value_set(BLE_CONN_HANDLE_INVALID,
@@ -222,7 +235,7 @@ ret_code_t ble_eda_level_update(ble_eda_t * p_eda,
             NRF_LOG_INFO("Eda level has been updated: %d%%", eda_level)
 
             // Save new eda value.
-            p_eda->eda_level_last = eda_level;
+            p_eda->eda_level_last = *data;
         }
         else
         {
@@ -282,8 +295,7 @@ ret_code_t ble_eda_level_update(ble_eda_t * p_eda,
 }
 
 
-ret_code_t ble_eda_lvl_on_reconnection_update(ble_eda_t * p_eda,
-                                                      uint16_t    conn_handle)
+ret_code_t ble_eda_lvl_on_reconnection_update(ble_eda_t * p_eda, uint16_t    conn_handle)
 {
     if (p_eda == NULL)
     {
@@ -296,6 +308,8 @@ ret_code_t ble_eda_lvl_on_reconnection_update(ble_eda_t * p_eda,
     {
         ble_gatts_hvx_params_t hvx_params;
         uint16_t               len = sizeof(uint8_t);
+        uint8_t *data = int16_to_array_8(p_eda->eda_level_last);
+        
 
         memset(&hvx_params, 0, sizeof(hvx_params));
 
@@ -303,7 +317,7 @@ ret_code_t ble_eda_lvl_on_reconnection_update(ble_eda_t * p_eda,
         hvx_params.type   = BLE_GATT_HVX_NOTIFICATION;
         hvx_params.offset = 0;
         hvx_params.p_len  = &len;
-        hvx_params.p_data = &p_eda->eda_level_last;
+        hvx_params.p_data = data;
 
         err_code = eda_notification_send(&hvx_params, conn_handle);
 

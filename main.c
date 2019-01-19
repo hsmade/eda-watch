@@ -190,7 +190,7 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
 /**@brief Function for performing eda measurement and updating the eda Level characteristic
  *        in eda Service.
  */
-static void eda_level_update(uint8_t value)
+static void eda_level_update(uint16_t value)
 {
     ret_code_t err_code;
 
@@ -1018,7 +1018,8 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
 
         // edda
         eda = adc_to_voltage(p_event->data.done.p_buffer[0]);
-        eda_level_update(eda);  // FIXME eda=int16_t, update expects uint8_t
+        eda_level_update(eda);
+        NRF_LOG_INFO("eda mV: %d\r\n", eda);
 
         // battery
         voltage = adc_to_voltage(p_event->data.done.p_buffer[1]);
@@ -1043,22 +1044,13 @@ void saadc_init(void)
 	
     nrf_saadc_channel_config_t channel_0_config =
         NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_AIN3);
-    channel_0_config.gain = NRF_SAADC_GAIN4;
-    channel_0_config.reference = NRF_SAADC_REFERENCE_VDD4;
+//    channel_0_config.gain = NRF_SAADC_GAIN6;
+//    channel_0_config.reference = NRF_SAADC_REFERENCE_VDD4;
 	
     nrf_saadc_channel_config_t channel_1_config =
         NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_VDD);
 
     err_code = nrf_drv_saadc_init(&saadc_config, saadc_callback);
-    APP_ERROR_CHECK(err_code);
-
-    err_code = nrf_drv_saadc_channel_init(0, &channel_0_config);
-    APP_ERROR_CHECK(err_code);
-    err_code = nrf_drv_saadc_channel_init(1, &channel_1_config);
-    APP_ERROR_CHECK(err_code);
-    err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[0],SAADC_SAMPLES_IN_BUFFER);
-    APP_ERROR_CHECK(err_code);   
-    err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[1],SAADC_SAMPLES_IN_BUFFER);
     APP_ERROR_CHECK(err_code);
 
     // calibrate
@@ -1070,6 +1062,16 @@ void saadc_init(void)
     {
         /* Wait for SAADC calibration to finish. */
     }
+
+    err_code = nrf_drv_saadc_channel_init(0, &channel_0_config);
+    APP_ERROR_CHECK(err_code);
+    err_code = nrf_drv_saadc_channel_init(1, &channel_1_config);
+    APP_ERROR_CHECK(err_code);
+    err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[0],SAADC_SAMPLES_IN_BUFFER);
+    APP_ERROR_CHECK(err_code);   
+    err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[1],SAADC_SAMPLES_IN_BUFFER);
+    APP_ERROR_CHECK(err_code);
+
 
 }
 // ---------- SAADC END ----------
