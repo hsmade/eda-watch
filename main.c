@@ -49,24 +49,25 @@ static const nrf_drv_timer_t   m_timer = NRF_DRV_TIMER_INSTANCE(1);
 static nrf_saadc_value_t       m_buffer_pool[2][SAADC_SAMPLES_IN_BUFFER];
 static nrf_ppi_channel_t       m_ppi_channel;
 static uint32_t                m_adc_evt_counter;
-
-#define ADC_RES_14BIT                       8196
-#define ADC_RES_12BIT                       4096
-#define ADC_RES_10BIT                       1024
-#define ADC_REF_VOLTAGE_IN_MILLIVOLTS       600                                     /**< Reference voltage (in milli volts) used by ADC while doing conversion. */
-#define ADC_PRE_SCALING_COMPENSATION        6                                       /**< The ADC is configured to use VDD with 1/3 prescaling as input. And hence the result of conversion is to be multiplied by 3 to get the actual value of the battery voltage.*/
-#define DIODE_FWD_VOLT_DROP_MILLIVOLTS      270                                     /**< Typical forward voltage drop of the diode . */
-
-/**@brief Macro to convert the result of ADC conversion in millivolts.
- *
- * @param[in]  ADC_VALUE   ADC result.
- *
- * @retval     Result converted to millivolts.
- */
-#define ADC_RESULT_IN_MILLI_VOLTS(ADC_VALUE)\
-        ((((ADC_VALUE) * ADC_REF_VOLTAGE_IN_MILLIVOLTS) / ADC_RES_10BIT) * ADC_PRE_SCALING_COMPENSATION)
 // SAADC END
 
+// BATT start
+#include "math.h"
+static volatile bool                m_adc_cal_in_progress;          //
+/** @brief The m_batt_meas return status codes.
+ */
+enum
+{
+    M_BATT_STATUS_CODE_SUCCESS,                     ///< Successfull
+    M_BATT_STATUS_CODE_INVALID_PARAM,               ///< Invalid parameters
+};
+#define ADC_GAIN                    NRF_SAADC_GAIN1     // ADC gain.
+#define ADC_REFERENCE_VOLTAGE       (0.6f)              // The standard internal ADC reference voltage.
+#define ADC_RESOLUTION_BITS         (8 + (SAADC_CONFIG_RESOLUTION * 2)) //ADC resolution [bits].
+#define ADC_BUF_SIZE                (1)                 // Size of each ADC buffer.
+#define INVALID_BATTERY_LEVEL       (0xFF)              // Invalid/default battery level.
+
+ // BATT END
 
 #define DEVICE_NAME                         "EDA"                            /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME                   "NordicSemiconductor"                   /**< Manufacturer. Will be passed to Device Information Service. */
@@ -945,16 +946,67 @@ void saadc_sampling_event_enable(void)
     APP_ERROR_CHECK(err_code);
 }
 
+
+/** @brief Converts ADC gain register values to actual gain.
+ */
+static uint32_t adc_gain_enum_to_real_gain(nrf_saadc_gain_t gain_reg, float * real_val)
+{
+    switch(gain_reg)
+    {
+        case NRF_SAADC_GAIN1_6: *real_val = 1 / (float)6;
+        break;
+        case NRF_SAADC_GAIN1_5: *real_val = 1 / (float)5;
+        break;
+        case NRF_SAADC_GAIN1_4: *real_val = 1 / (float)4;
+        break;
+        case NRF_SAADC_GAIN1_3: *real_val = 1 / (float)3;
+        break;
+        case NRF_SAADC_GAIN1_2: *real_val = 1 / (float)2;
+        break;
+        case NRF_SAADC_GAIN1:   *real_val = 1;
+        break;
+        case NRF_SAADC_GAIN2:   *real_val = 2;
+        break;
+        case NRF_SAADC_GAIN4:   *real_val = 3;
+        break;
+        default: return M_BATT_STATUS_CODE_INVALID_PARAM;
+    };
+
+    return M_BATT_STATUS_CODE_SUCCESS;
+}
+
+static uint16_t adc_to_voltage(uint32_t adc_val)
+{
+    float    adc_gain;
+    uint16_t tmp_voltage;
+    uint16_t voltage;
+    uint32_t err_code;
+
+    err_code = adc_gain_enum_to_real_gain(ADC_GAIN, &adc_gain);
+    APP_ERROR_CHECK(err_code);
+
+    float tmp = adc_val / ((adc_gain / ADC_REFERENCE_VOLTAGE) * pow(2, ADC_RESOLUTION_BITS));
+    tmp_voltage =  (uint16_t) (tmp * 1000);
+    voltage = ( (tmp_voltage + 5) / 10) * 10;  // Round the value.
+
+    return voltage;
+}
+
 void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
 {
-    if (p_event->type == NRF_DRV_SAADC_EVT_DONE)
+    if (p_event->type == NRF_DRV_SAADC_EVT_CALIBRATEDONE)
+    {
+        m_adc_cal_in_progress = false;
+    }
+    else if (p_event->type == NRF_DRV_SAADC_EVT_DONE)
     {
         ret_code_t err_code;
         uint16_t adc_value;
         uint8_t value[SAADC_SAMPLES_IN_BUFFER*2];
         uint8_t bytes_to_send;
-        uint8_t eda;
+        uint16_t eda;
         uint8_t battery;
+        uint16_t voltage;
      
         // set buffers
         err_code = nrf_drv_saadc_buffer_convert(p_event->data.done.p_buffer, SAADC_SAMPLES_IN_BUFFER);
@@ -964,11 +1016,15 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
         NRF_LOG_INFO("raw eda: %d\r\n", p_event->data.done.p_buffer[0]);
         NRF_LOG_INFO("raw batt: %d\r\n", p_event->data.done.p_buffer[1]);
 
-        eda = p_event->data.done.p_buffer[0];
-        eda_level_update(eda);
+        // edda
+        eda = adc_to_voltage(p_event->data.done.p_buffer[0]);
+        eda_level_update(eda);  // FIXME eda=int16_t, update expects uint8_t
 
-        NRF_LOG_INFO("batt mv: %d", ADC_RESULT_IN_MILLI_VOLTS(p_event->data.done.p_buffer[1]) + DIODE_FWD_VOLT_DROP_MILLIVOLTS);
-        battery = battery_level_in_percent(ADC_RESULT_IN_MILLI_VOLTS(p_event->data.done.p_buffer[1]) + DIODE_FWD_VOLT_DROP_MILLIVOLTS);
+        // battery
+        voltage = adc_to_voltage(p_event->data.done.p_buffer[1]);
+
+        NRF_LOG_INFO("batt mv: %d", voltage);
+        battery = battery_level_in_percent(voltage);
         battery_level_update(battery);
 
         NRF_LOG_INFO("batt: %d%%", battery);
@@ -976,6 +1032,7 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
         m_adc_evt_counter++;
     }
 }
+
 
 void saadc_init(void)
 {
@@ -994,7 +1051,6 @@ void saadc_init(void)
 
     err_code = nrf_drv_saadc_init(&saadc_config, saadc_callback);
     APP_ERROR_CHECK(err_code);
-    // nrf_saadc_oversample_set(NRF_SAADC_OVERSAMPLE_8X);  // BUG: Breaks
 
     err_code = nrf_drv_saadc_channel_init(0, &channel_0_config);
     APP_ERROR_CHECK(err_code);
@@ -1004,6 +1060,17 @@ void saadc_init(void)
     APP_ERROR_CHECK(err_code);   
     err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[1],SAADC_SAMPLES_IN_BUFFER);
     APP_ERROR_CHECK(err_code);
+
+    // calibrate
+    m_adc_cal_in_progress = true;
+    err_code = nrf_drv_saadc_calibrate_offset();
+    APP_ERROR_CHECK(err_code);
+
+    while(m_adc_cal_in_progress)
+    {
+        /* Wait for SAADC calibration to finish. */
+    }
+
 }
 // ---------- SAADC END ----------
 
@@ -1054,6 +1121,7 @@ int main(void)
     saadc_sampling_event_init();
     saadc_init();
     saadc_sampling_event_enable();
+
 
     // Create a FreeRTOS task for the BLE stack.
     // The task will run advertising_start() before entering its loop.

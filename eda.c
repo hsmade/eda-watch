@@ -193,7 +193,7 @@ static ret_code_t eda_notification_send(ble_gatts_hvx_params_t * const p_hvx_par
 
 
 ret_code_t ble_eda_level_update(ble_eda_t * p_eda,
-                                        uint8_t     eda_level,
+                                        uint8_t    eda_level,
                                         uint16_t    conn_handle)
 {
     if (p_eda == NULL)
@@ -209,7 +209,7 @@ ret_code_t ble_eda_level_update(ble_eda_t * p_eda,
         // Initialize value struct.
         memset(&gatts_value, 0, sizeof(gatts_value));
 
-        gatts_value.len     = sizeof(uint8_t);
+        gatts_value.len     = sizeof(uint16_t);
         gatts_value.offset  = 0;
         gatts_value.p_value = &eda_level;
 

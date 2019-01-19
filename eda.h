@@ -147,7 +147,7 @@ void ble_eda_on_ble_evt(ble_evt_t const * p_ble_evt, void * p_context);
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
 ret_code_t ble_eda_level_update(ble_eda_t * p_eda,
-                                        uint8_t     eda_level,
+                                        uint8_t    eda_level,
                                         uint16_t    conn_handle);
 
 
