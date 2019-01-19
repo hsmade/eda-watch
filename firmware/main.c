@@ -135,7 +135,6 @@ static ble_uuid_t m_adv_uuids[] =                                   /**< Univers
     {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE}
 };
 
-//static TimerHandle_t m_battery_timer;                               /**< Definition of battery timer. */
 static TimerHandle_t m_heart_rate_timer;                            /**< Definition of heart rate timer. */
 static TimerHandle_t m_rr_interval_timer;                           /**< Definition of RR interval timer. */
 static TimerHandle_t m_sensor_contact_timer;                        /**< Definition of sensor contact detected timer. */
@@ -1044,8 +1043,6 @@ void saadc_init(void)
 	
     nrf_saadc_channel_config_t channel_0_config =
         NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_AIN3);
-//    channel_0_config.gain = NRF_SAADC_GAIN6;
-//    channel_0_config.reference = NRF_SAADC_REFERENCE_VDD4;
 	
     nrf_saadc_channel_config_t channel_1_config =
         NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_VDD);
