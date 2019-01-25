@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import {Text, View} from "react-native";
 import {LineChart, Grid, XAxis} from 'react-native-svg-charts'
 import dateFns from 'date-fns'
+import {decode as atob} from 'base-64'
 
 export class EdaComponent extends Component {
     constructor() {
@@ -16,7 +17,7 @@ export class EdaComponent extends Component {
             this.setState({dataPoints: [...this.state.dataPoints, {date: new Date(), value: base64ToInt16(atob(nextProps.data))}]})
             if (this.state.dataPoints.length > 60) {
                 this.setState({ dataPoints: this.state.dataPoints.slice(1) })
-                console.log(this.state, this.state.dataPoints.length)
+                // console.log(this.state, this.state.dataPoints.length)
             }
         }
     }

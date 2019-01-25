@@ -64,11 +64,10 @@ export default class SensorsComponent extends Component {
     }
 
     scanAndConnect() {
-        console.log("Starting scanner")
         this.manager.startDeviceScan(null,
             {ScanMode: "LowLatency"}, (error, device) => {
                 this.info("Scanning...")
-                console.log("Found", device.name)
+                // console.log("Found", device.name)
 
                 if (error) {
                     this.error("Got error: "+ error.message)
@@ -77,7 +76,7 @@ export default class SensorsComponent extends Component {
 
                 if (device.name === 'EDA') {
                     this.info("Connecting to EDA")
-                    console.log("Connected to:", device)
+                    // console.log("Connected to:", device)
                     this.manager.stopDeviceScan()
                     device.connect()
                         .then((device) => {

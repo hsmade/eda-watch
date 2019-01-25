@@ -17,7 +17,7 @@ export class HrsComponent extends Component {
             this.setState({dataPoints: [...this.state.dataPoints, {date: new Date(), value: parseHeartRateData(Buffer.from(nextProps.data)).bpm}]})
             if (this.state.dataPoints.length > 60) {
                 this.setState({ dataPoints: this.state.dataPoints.slice(1) })
-                console.log(this.state, this.state.dataPoints.length)
+                // console.log(this.state, this.state.dataPoints.length)
             }
         }
     }
