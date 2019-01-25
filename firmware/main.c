@@ -132,7 +132,8 @@ static ble_uuid_t m_adv_uuids[] =                                   /**< Univers
 {
     {BLE_UUID_HEART_RATE_SERVICE, BLE_UUID_TYPE_BLE},
     {BLE_UUID_BATTERY_SERVICE, BLE_UUID_TYPE_BLE},
-    {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE}
+    {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE},
+    {BLE_UUID_EDA_SERVICE_BASE_UUID, BLE_UUID_TYPE_BLE}
 };
 
 static TimerHandle_t m_heart_rate_timer;                            /**< Definition of heart rate timer. */
