@@ -3,6 +3,7 @@ import {Text, View} from "react-native";
 import {LineChart, Grid, XAxis} from 'react-native-svg-charts'
 import dateFns from 'date-fns'
 import {decode as atob} from 'base-64'
+import {StoreComponent} from "./Database";
 
 export class EdaComponent extends Component {
     constructor() {
@@ -61,6 +62,16 @@ export class EdaComponent extends Component {
                 />
             </View>
         )
+    }
+}
+
+export class Store extends StoreComponent {
+    constructor() {
+        super();
+        this.state.name = 'EDA'
+        this.state.schema = "CREATE TABLE IF NOT EXISTS EDA (datetime INTEGER PRIMARY KEY, eda VARCHAR(20))"
+        this.state.insertQuery = "INSERT INTO EDA VALUES(?1, ?2)"
+        console.log("constructor:", this.state)
     }
 }
 

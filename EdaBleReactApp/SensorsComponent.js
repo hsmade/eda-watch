@@ -1,15 +1,16 @@
 import React, { Component } from 'react';
-import { Platform, View, Text } from 'react-native';
+import { Platform, View, Text, StyleSheet, Dimensions } from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
 import { PermissionsAndroid } from 'react-native';
-import { HrsComponent } from "./HRS";
-import { EdaComponent } from "./EDA";
+import { HrsComponent, Store as HrsStore } from "./HRS";
+import { EdaComponent, Store as EdaStore } from "./EDA";
+import { TabView, SceneMap } from 'react-native-tab-view';
 
 
 function requestCoarseLocationPermission() {
     const enabled = PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION)
     if (!enabled) {
-        console.log("Permission not enabled")
+        console.log("Permission not enabled");
         const granted = PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION)
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
             console.error("Didn't get permission")
@@ -22,13 +23,21 @@ function requestCoarseLocationPermission() {
 }
 
 export default class SensorsComponent extends Component {
-
     constructor() {
-        super()
-        requestCoarseLocationPermission()
-        this.manager = new BleManager()
-        console.log("BLE manager started")
-        this.state = {info: "", values: {}}
+        super();
+        requestCoarseLocationPermission();
+        this.manager = new BleManager();
+        console.log("BLE manager started");
+        this.state = {
+            index: 0,
+            routes: [
+                { key: 'Info', title: 'Info' },
+                { key: 'Live', title: 'Live' },
+                { key: 'Historical', title: 'Historical' },
+            ],
+            info: "",
+            values: {}}
+            ;
         this.uuids = {
             "EDA": {
                 service: "0000fdb7-0000-1000-8000-00805f9b34fb",
@@ -38,7 +47,29 @@ export default class SensorsComponent extends Component {
                 service: "0000180d-0000-1000-8000-00805f9b34fb",
                 characteristic: "00002a37-0000-1000-8000-00805f9b34fb",
             }
-        }
+        };
+
+        this.Info = () => (
+            <View style={[styles.scene, { backgroundColor: '#b1c3ff' }]} >
+                <Text>{this.state.info}</Text>
+            </View>
+        );
+
+        this.Live = () => (
+            <View style={[styles.scene, { backgroundColor: '#fbffae' }]} >
+                <HrsComponent data={this.state.values["HRS"]}/>
+                <EdaComponent data={this.state.values["EDA"]}/>
+                <EdaStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["EDA"]}/>
+                <HrsStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["HRS"]}/>
+            </View>
+        );
+
+        this.Historical = () => (
+            <View style={[styles.scene, { backgroundColor: '#b7949a' }]} >
+
+            </View>
+        );
+
     }
 
     info(message) {
@@ -66,25 +97,25 @@ export default class SensorsComponent extends Component {
     scanAndConnect() {
         this.manager.startDeviceScan(null,
             {ScanMode: "LowLatency"}, (error, device) => {
-                this.info("Scanning...")
+                this.info("Scanning...");
                 // console.log("Found", device.name)
 
                 if (error) {
-                    this.error("Got error: "+ error.message)
+                    this.error("Got error: "+ error.message);
                     return
                 }
 
                 if (device.name === 'EDA') {
-                    this.info("Connecting to EDA")
+                    this.info("Connecting to EDA");
                     // console.log("Connected to:", device)
-                    this.manager.stopDeviceScan()
+                    this.manager.stopDeviceScan();
                     device.connect()
                         .then((device) => {
-                            this.info("Discovering services and characteristics")
+                            this.info("Discovering services and characteristics");
                             return device.discoverAllServicesAndCharacteristics()
                         })
                         .then((device) => {
-                            this.info("Setting notifications")
+                            this.info("Setting notifications");
                             return this.setupNotifications(device)
                         })
                         .then(() => {
@@ -105,12 +136,35 @@ export default class SensorsComponent extends Component {
     }
 
     render() {
+        // return (
+        //     <TabView
+        //         navigationState={this.state}
+        //         renderScene={SceneMap({
+        //             Info: this.Info,
+        //             Live: this.Live,
+        //             Historical: this.Historical,
+        //         })}
+        //         onIndexChange={index => this.setState({ index })}
+        //         initialLayout={{
+        //             width: Dimensions.get('window').width,
+        //             height: Dimensions.get('window').height,
+        //         }}
+        //     />
+        // )
         return (
             <View>
                 <Text>{this.state.info}</Text>
                 <HrsComponent data={this.state.values["HRS"]}/>
                 <EdaComponent data={this.state.values["EDA"]}/>
+                <EdaStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["EDA"]}/>
+                <HrsStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["HRS"]}/>
             </View>
         )
     }
 }
+
+const styles = StyleSheet.create({
+    scene: {
+        flex: 1,
+    },
+});

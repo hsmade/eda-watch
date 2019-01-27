@@ -3,6 +3,7 @@ import {Buffer} from "buffer";
 import {Text, View} from "react-native";
 import {LineChart, Grid, XAxis} from 'react-native-svg-charts'
 import dateFns from 'date-fns'
+import {StoreComponent} from "./Database";
 
 export class HrsComponent extends Component {
     constructor() {
@@ -61,6 +62,17 @@ export class HrsComponent extends Component {
                 />
             </View>
         )
+    }
+}
+
+
+export class Store extends StoreComponent {
+    constructor() {
+        super();
+        this.state.name = 'HRS'
+        this.state.schema = "CREATE TABLE IF NOT EXISTS HRS (datetime INTEGER PRIMARY KEY, bpm VARCHAR(20))"
+        this.state.insertQuery = "INSERT INTO HRS VALUES(?1, ?2)"
+        console.log("constructor:", this.state)
     }
 }
 
