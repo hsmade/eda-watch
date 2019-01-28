@@ -4,7 +4,7 @@ import { BleManager } from 'react-native-ble-plx';
 import { PermissionsAndroid } from 'react-native';
 import { HrsComponent, Store as HrsStore } from "./HRS";
 import { EdaComponent, Store as EdaStore } from "./EDA";
-import {PagerTabIndicator, IndicatorViewPager, PagerTitleIndicator, PagerDotIndicator} from 'rn-viewpager';
+import { IndicatorViewPager, PagerTitleIndicator} from 'rn-viewpager';
 
 
 function requestCoarseLocationPermission() {
@@ -29,12 +29,6 @@ export default class SensorsComponent extends Component {
     this.manager = new BleManager();
     console.log("BLE manager started");
     this.state = {
-      index: 0,
-      routes: [
-        { key: 'info', title: 'Info' },
-        { key: 'live', title: 'Live' },
-        // { key: 'Historical', title: 'Historical' },
-      ],
       info: "",
       values: {}}
     ;
@@ -48,13 +42,6 @@ export default class SensorsComponent extends Component {
         characteristic: "00002a37-0000-1000-8000-00805f9b34fb",
       }
     };
-
-    this.Live = () => (
-        <View style={[styles.scene, { backgroundColor: '#fbffae' }]} >
-          <HrsComponent data={this.state.values["HRS"]}/>
-          <EdaComponent data={this.state.values["EDA"]}/>
-        </View>
-    );
   }
 
   info(message) {
@@ -127,7 +114,7 @@ export default class SensorsComponent extends Component {
             <HrsStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["HRS"]}/>
             <IndicatorViewPager
                 style={{height:Dimensions.get('window').height - 20, backgroundColor:'cadetblue'}}
-                indicator={this._renderDotIndicator()}
+                indicator={this._renderIndicator()}
             >
                 <View>
                     <Text>{this.state.info}</Text>
@@ -143,7 +130,7 @@ export default class SensorsComponent extends Component {
       )
   }
 
-  _renderDotIndicator() {
-      return <PagerDotIndicator pageCount={3} />;
+  _renderIndicator() {
+      return <PagerTitleIndicator titles={['Info', 'Hrs', 'Eda']} />;
   }
 }
