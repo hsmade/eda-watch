@@ -154,7 +154,7 @@ export default class SensorsComponent extends Component {
         return (
             <View>
                 <Text>{this.state.info}</Text>
-                <HrsComponent data={this.state.values["HRS"]}/>
+                {/*<HrsComponent data={this.state.values["HRS"]}/>*/}
                 <EdaComponent data={this.state.values["EDA"]}/>
                 <EdaStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["EDA"]}/>
                 <HrsStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["HRS"]}/>
