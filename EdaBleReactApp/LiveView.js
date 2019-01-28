@@ -34,7 +34,7 @@ export class LiveView extends Component {
     render() {
         return (
             <View style={{ height: 200, padding: 20 }}>
-                {/*<Text>{this.toText()}</Text>*/}
+                <Text>{this.toText()}</Text>
                 <LineChart
                     style={{ height: 200 }}
                     data={ this.state.dataPoints }

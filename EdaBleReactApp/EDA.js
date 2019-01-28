@@ -5,6 +5,7 @@ import {LiveView} from "./LiveView";
 
 export class EdaComponent extends LiveView {
     constructor() {
+        console.log("EDA.EdaComponent.constructor");
         super();
         this.name = "EDA";
     }
@@ -16,6 +17,7 @@ export class EdaComponent extends LiveView {
 
 export class Store extends StoreComponent {
     constructor() {
+        console.log("EDA.Store.constructor");
         super();
         this.state.name = 'EDA';
         this.state.schema = "CREATE TABLE IF NOT EXISTS EDA (datetime INTEGER PRIMARY KEY, eda VARCHAR(20))";
@@ -25,6 +27,7 @@ export class Store extends StoreComponent {
 
 export class Read extends ReadComponent {
     constructor() {
+        console.log("EDA.Read.constructor");
         super();
         this.state.name = 'EDA';
         this.state.schema = "CREATE TABLE IF NOT EXISTS EDA (datetime INTEGER PRIMARY KEY, eda VARCHAR(20))";

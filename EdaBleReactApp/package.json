@@ -15,7 +15,8 @@
     "react-native-ble-plx": "^1.0.1",
     "react-native-sqlite-storage": "^3.3.9",
     "react-native-svg": "^6.5.2",
-    "react-native-svg-charts": "^5.2.0"
+    "react-native-svg-charts": "^5.2.0",
+    "rn-viewpager": "^1.2.9"
   },
   "devDependencies": {
     "babel-jest": "23.6.0",

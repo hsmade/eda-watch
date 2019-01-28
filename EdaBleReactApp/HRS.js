@@ -10,7 +10,7 @@ export class HrsComponent extends LiveView {
     }
 
     convert(data) {
-        return parseHeartRateData(Buffer.from(data))
+        return parseHeartRateData(Buffer.from(data)).bpm
     }
 }
 
@@ -34,7 +34,7 @@ export class Read extends ReadComponent {
     }
 
     convertData(data) {
-        return parseHeartRateData(Buffer.from(data))
+        return parseHeartRateData(Buffer.from(data)).bpm
     }
 }
 

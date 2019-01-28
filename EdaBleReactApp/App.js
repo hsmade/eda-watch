@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
-import { Platform, View, Text } from 'react-native';
+import { Platform, View, Text, Dimensions } from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
 import { PermissionsAndroid } from 'react-native';
 import { HrsComponent, Store as HrsStore } from "./HRS";
 import { EdaComponent, Store as EdaStore } from "./EDA";
+import {PagerTabIndicator, IndicatorViewPager, PagerTitleIndicator, PagerDotIndicator} from 'rn-viewpager';
 
 
 function requestCoarseLocationPermission() {
@@ -30,9 +31,9 @@ export default class SensorsComponent extends Component {
     this.state = {
       index: 0,
       routes: [
-        { key: 'Info', title: 'Info' },
-        { key: 'Live', title: 'Live' },
-        { key: 'Historical', title: 'Historical' },
+        { key: 'info', title: 'Info' },
+        { key: 'live', title: 'Live' },
+        // { key: 'Historical', title: 'Historical' },
       ],
       info: "",
       values: {}}
@@ -48,27 +49,12 @@ export default class SensorsComponent extends Component {
       }
     };
 
-    this.Info = () => (
-        <View style={[styles.scene, { backgroundColor: '#b1c3ff' }]} >
-          <Text>{this.state.info}</Text>
-        </View>
-    );
-
     this.Live = () => (
         <View style={[styles.scene, { backgroundColor: '#fbffae' }]} >
           <HrsComponent data={this.state.values["HRS"]}/>
           <EdaComponent data={this.state.values["EDA"]}/>
-          <EdaStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["EDA"]}/>
-          <HrsStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["HRS"]}/>
         </View>
     );
-
-    this.Historical = () => (
-        <View style={[styles.scene, { backgroundColor: '#b7949a' }]} >
-
-        </View>
-    );
-
   }
 
   info(message) {
@@ -135,14 +121,29 @@ export default class SensorsComponent extends Component {
   }
 
   render() {
-    return (
-        <View>
-          <Text>{this.state.info}</Text>
-          <HrsComponent data={this.state.values["HRS"]}/>
-          <EdaComponent data={this.state.values["EDA"]}/>
-          <EdaStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["EDA"]}/>
-          <HrsStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["HRS"]}/>
+      return(
+        <View style={{flex:1}}>
+            <EdaStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["EDA"]}/>
+            <HrsStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["HRS"]}/>
+            <IndicatorViewPager
+                style={{height:Dimensions.get('window').height - 20, backgroundColor:'cadetblue'}}
+                indicator={this._renderDotIndicator()}
+            >
+                <View>
+                    <Text>{this.state.info}</Text>
+                </View>
+                <View>
+                    <HrsComponent data={this.state.values["HRS"]}/>
+                </View>
+                <View>
+                    <EdaComponent data={this.state.values["EDA"]}/>
+                </View>
+            </IndicatorViewPager>
         </View>
-    )
+      )
+  }
+
+  _renderDotIndicator() {
+      return <PagerDotIndicator pageCount={3} />;
   }
 }
