@@ -5,6 +5,9 @@ import { PermissionsAndroid } from 'react-native';
 import { HrsComponent, Store as HrsStore } from "./HRS";
 import { EdaComponent, Store as EdaStore } from "./EDA";
 import { IndicatorViewPager, PagerTitleIndicator} from 'rn-viewpager';
+import { ConvertData as EdaConverter } from './EDA';
+import { ConvertData as HrsConverter } from './HRS';
+import { Chart } from './Chart';
 
 
 function requestCoarseLocationPermission() {
@@ -22,24 +25,29 @@ function requestCoarseLocationPermission() {
   }
 }
 
-export default class SensorsComponent extends Component {
+export default class App extends Component {
   constructor() {
     super();
     requestCoarseLocationPermission();
     this.manager = new BleManager();
     console.log("BLE manager started");
+
     this.state = {
       info: "",
-      values: {}}
-    ;
-    this.uuids = {
+      values: {},
+      chartData: {HRS: [{x: new Date(), y: 0},{x: new Date(), y: 0}], EDA: [{x: new Date(), y: 0},{x: new Date(), y: 0}]},
+    };
+
+    this.characteristics = {
       "EDA": {
         service: "0000fdb7-0000-1000-8000-00805f9b34fb",
         characteristic: "0000fdb8-0000-1000-8000-00805f9b34fb",
+        conversion: EdaConverter,
       },
       "HRS": {
         service: "0000180d-0000-1000-8000-00805f9b34fb",
         characteristic: "00002a37-0000-1000-8000-00805f9b34fb",
+        conversion: HrsConverter,
       }
     };
   }
@@ -53,7 +61,12 @@ export default class SensorsComponent extends Component {
   }
 
   updateValue(key, value) {
-    this.setState({values: {...this.state.values, [key]: value}})
+    this.setState({values: {...this.state.values, [key]: value}});
+
+    this.setState({chartData: {...this.state.chartData, [key]: this.state.chartData[key].concat([{x: new Date(), y: value}]) } });
+      if (this.state.chartData[key].length > 60) {
+          this.setState({ chartData: {...this.state.chartData, [key]: this.state.chartData[key].slice(1) }})
+      }
   }
 
   componentWillMount() {
@@ -100,9 +113,9 @@ export default class SensorsComponent extends Component {
   }
 
   async setupNotifications(device) {
-    for (const uuid in this.uuids) {
-      device.monitorCharacteristicForService(this.uuids[uuid].service, this.uuids[uuid].characteristic, (error, characteristic) => {
-        this.updateValue(uuid, characteristic.value)
+    for (const uuid in this.characteristics) {
+      device.monitorCharacteristicForService(this.characteristics[uuid].service, this.characteristics[uuid].characteristic, (error, characteristic) => {
+        this.updateValue(uuid, this.characteristics[uuid].conversion(characteristic.value))
       })
     }
   }
@@ -110,20 +123,18 @@ export default class SensorsComponent extends Component {
   render() {
       return(
         <View style={{flex:1}}>
-            <EdaStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["EDA"]}/>
-            <HrsStore datetime={Math.round((new Date()).getTime() / 1000)} data={this.state.values["HRS"]}/>
+            <EdaStore datetime={new Date().getTime()} data={this.state.values["EDA"]}/>
+            <HrsStore datetime={new Date().getTime()} data={this.state.values["HRS"]}/>
+
             <IndicatorViewPager
-                style={{height:Dimensions.get('window').height - 20, backgroundColor:'cadetblue'}}
+                style={{height:Dimensions.get('window').height - 20, backgroundColor:'#263238'}}
                 indicator={this._renderIndicator()}
             >
                 <View>
-                    <Text>{this.state.info}</Text>
+                    <Text style={{color: '#ECEFF1'}}>{this.state.info}</Text>
                 </View>
                 <View>
-                    <HrsComponent data={this.state.values["HRS"]}/>
-                </View>
-                <View>
-                    <EdaComponent data={this.state.values["EDA"]}/>
+                    <Chart data={[this.state.chartData["HRS"],this.state.chartData["EDA"]]} />
                 </View>
             </IndicatorViewPager>
         </View>
@@ -131,6 +142,9 @@ export default class SensorsComponent extends Component {
   }
 
   _renderIndicator() {
-      return <PagerTitleIndicator titles={['Info', 'Hrs', 'Eda']} />;
+      return <PagerTitleIndicator
+          // style = {{ backgroundColor: '#546E7A' }}
+          titles = {['Info', 'Graph']}
+      />;
   }
 }

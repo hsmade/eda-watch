@@ -9,10 +9,6 @@ export class EdaComponent extends LiveView {
         super();
         this.name = "EDA";
     }
-
-    convert (data) {
-        return base64ToInt16(atob(data))
-    }
 }
 
 export class Store extends StoreComponent {
@@ -37,6 +33,13 @@ export class Read extends ReadComponent {
     convertData(data) {
         return base64ToInt16(atob(data))
     }
+}
+
+/**
+ * @return {number}
+ */
+export function ConvertData(data) {
+    return base64ToInt16(atob(data))
 }
 
 function base64ToInt16(raw) {
