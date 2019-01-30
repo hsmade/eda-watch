@@ -16,6 +16,7 @@
     "react-native-sqlite-storage": "^3.3.9",
     "react-native-svg": "^6.5.2",
     "react-native-svg-charts": "^5.2.0",
+    "react-redux": "^6.0.0",
     "rn-viewpager": "^1.2.9",
     "victory-native": "^31.0.0"
   },

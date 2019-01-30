@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
 import { Platform, View, Text, Dimensions } from 'react-native';
-import { BleManager } from 'react-native-ble-plx';
+import {BleManager, LogLevel} from 'react-native-ble-plx';
 import { PermissionsAndroid } from 'react-native';
-import { HrsComponent, Store as HrsStore } from "./HRS";
-import { EdaComponent, Store as EdaStore } from "./EDA";
+import { Read as HrsRead, Store as HrsStore } from "./HRS";
+import { Read as EdaRead, Store as EdaStore } from "./EDA";
 import { IndicatorViewPager, PagerTitleIndicator} from 'rn-viewpager';
 import { ConvertData as EdaConverter } from './EDA';
 import { ConvertData as HrsConverter } from './HRS';
 import { Chart } from './Chart';
-
+import { Button } from 'react-native';
 
 function requestCoarseLocationPermission() {
   const enabled = PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION)
@@ -61,6 +61,7 @@ export default class App extends Component {
   }
 
   updateValue(key, value) {
+      console.log("updatevalue", key, value)
     this.setState({values: {...this.state.values, [key]: value}});
 
     this.setState({chartData: {...this.state.chartData, [key]: this.state.chartData[key].concat([{x: new Date(), y: value}]) } });
@@ -77,6 +78,9 @@ export default class App extends Component {
     } else {
       this.scanAndConnect()
     }
+      this.manager.onStateChange((state) => {
+        console.log("ble state change:", state)
+      })
   }
 
   scanAndConnect() {
@@ -86,6 +90,7 @@ export default class App extends Component {
           // console.log("Found", device.name)
 
           if (error) {
+              console.log(error);
             this.error("Got error: "+ error.message);
             return
           }
@@ -114,7 +119,12 @@ export default class App extends Component {
 
   async setupNotifications(device) {
     for (const uuid in this.characteristics) {
+        console.log("Setting up notifs", device)
       device.monitorCharacteristicForService(this.characteristics[uuid].service, this.characteristics[uuid].characteristic, (error, characteristic) => {
+          console.log("monitorCharacteristicForService:", error, characteristic)
+          if (error !== null) {
+              this.scanAndConnect()
+          }
         this.updateValue(uuid, this.characteristics[uuid].conversion(characteristic.value))
       })
     }
@@ -132,9 +142,10 @@ export default class App extends Component {
             >
                 <View>
                     <Text style={{color: '#ECEFF1'}}>{this.state.info}</Text>
+                    <Button title="connect" onPress={this.scanAndConnect.bind(this)}></Button>
                 </View>
                 <View>
-                    <Chart data={[this.state.chartData["HRS"],this.state.chartData["EDA"]]} />
+                    <Chart data={[this.state.chartData["HRS"], this.state.chartData["EDA"]]} />
                 </View>
             </IndicatorViewPager>
         </View>

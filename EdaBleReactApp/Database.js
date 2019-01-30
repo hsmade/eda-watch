@@ -21,7 +21,7 @@ export class StoreComponent extends Component {
                 query,
                 params,
                 (tx, results) => {
-                    console.log('Results: ',tx, results);
+                    // console.log('Results: ',tx, results);
                 }
             );
         });
@@ -29,7 +29,7 @@ export class StoreComponent extends Component {
     }
 
     initDB() {
-        console.log("INIT DB", this.state.name);
+        // console.log("INIT DB", this.state.name);
         this.executeQuery(this.state.schema, [])
     }
 
@@ -39,7 +39,7 @@ export class StoreComponent extends Component {
     }
 
     componentWillReceiveProps(nextProps: Readonly<P>, nextContext: any): void {
-        console.log("UPDATE DB", this.state.name, nextProps);
+        // console.log("UPDATE DB", this.state.name, nextProps);
         this.executeQuery(this.state.insertQuery, [nextProps.datetime, nextProps.data])
     }
 
@@ -65,7 +65,7 @@ export class ReadComponent extends Component {
                 query,
                 params,
                 (tx, results) => {
-                    console.log('Results: ',tx, results);
+                    // console.log('Results: ',tx, results);
                 }
             );
         });
@@ -73,7 +73,7 @@ export class ReadComponent extends Component {
     }
 
     initDB() {
-        console.log("INIT DB", this.state.name);
+        // console.log("INIT DB", this.state.name);
         this.executeQuery(this.state.schema, [])
     }
 
