@@ -1,38 +1,5 @@
 import React  from 'react';
 import {Buffer} from "buffer";
-import {ReadComponent, StoreComponent} from "./Database";
-import {LiveView} from "./LiveView";
-
-export class HrsComponent extends LiveView {
-    constructor() {
-        super();
-        this.name = "HRS";
-    }
-}
-
-
-export class Store extends StoreComponent {
-    constructor() {
-        super();
-        this.state.name = 'HRS';
-        this.state.schema = "CREATE TABLE IF NOT EXISTS HRS (datetime INTEGER PRIMARY KEY, bpm VARCHAR(20))";
-        this.state.insertQuery = "INSERT INTO HRS VALUES(?1, ?2)";
-        console.log("constructor:", this.state)
-    }
-}
-
-export class Read extends ReadComponent {
-    constructor() {
-        super();
-        this.state.name = 'EDA';
-        this.state.schema = "CREATE TABLE IF NOT EXISTS EDA (datetime INTEGER PRIMARY KEY, eda VARCHAR(20))";
-        this.state.readQuery = "SELECT * FROM EDA WHERE datetime >= ? AND datetime <= ?";
-    }
-
-    convertData(data) {
-        return parseHeartRateData(Buffer.from(data)).bpm
-    }
-}
 
 /**
  * @return {number}

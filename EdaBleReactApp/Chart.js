@@ -11,6 +11,7 @@ export class Chart extends React.Component {
         const anchors = ["end", "start"];
         const colors = ["magenta", "cyan"];
         const data = this.props.data;
+        const labels = ["HRS", "EDA"];
         const maxima = data.map(
             (dataset) => Math.max(...dataset.map((d) => d.y)) || 1
         );
@@ -32,12 +33,14 @@ export class Chart extends React.Component {
                     {data.map((d, i) => (
                         <VictoryAxis dependentAxis
                                      key={i}
+                                     label={labels[i]}
                                      offsetX={xOffsets[i]}
                                      style={{
                                          grid: { stroke: (t) => "" },
                                          axis: { stroke: colors[i] },
                                          ticks: { padding: tickPadding[i] },
                                          tickLabels: { fill: colors[i], textAnchor: anchors[i] },
+                                         axisLabel: {fontSize: 20, padding: 30, fill: "white"},
                                      }}
                             // Use normalized tickValues (0 - 1)
                                      tickValues={[0.25, 0.5, 0.75, 1]}
