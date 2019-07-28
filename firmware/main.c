@@ -51,6 +51,9 @@
 #include "nrf_nvmc.h"
 
 
+// MAX30101
+#define MAX_3010X_ADDRESS 0x57
+
 // SAADC START
 #include "nrf_soc.h"
 #include "nrf_drv_saadc.h"
@@ -1093,6 +1096,7 @@ void saadc_init(void)
 // ---------- SAADC END ----------
 
 
+// ---------- DISPLAY  -----------
 void display_init(void) 
 {
     nrf_gpio_cfg(
@@ -1117,6 +1121,62 @@ void display_status(char* text)
     ssd1306_putstring(text);
     ssd1306_display();
 }
+
+
+// ---------- DISPLAY END --------
+
+
+// ---------- MAX30101  ----------
+void max3010x_init(void) 
+{
+    const nrf_drv_twi_t m_twi_master = NRF_DRV_TWI_INSTANCE(1);
+    ret_code_t ret;
+    // scl, sda
+    uint32_t scl, sda;
+    scl = NRF_GPIO_PIN_MAP(0, 24);
+    sda = NRF_GPIO_PIN_MAP(0, 3);
+       const nrf_drv_twi_config_t config = {
+                .scl                = scl,
+                .sda                = sda,
+                .frequency          = NRF_TWI_FREQ_400K,
+                .interrupt_priority = APP_IRQ_PRIORITY_LOWEST
+        };
+
+        do {
+                ret = nrf_drv_twi_init(&m_twi_master, &config, /*twi_evt_handler*/ NULL, NULL);
+                if (NRF_SUCCESS != ret) {
+                        break;
+                }
+                nrf_drv_twi_enable(&m_twi_master);
+        }
+        while (0);
+    if (NRF_SUCCESS != ret) {
+      APP_ERROR_CHECK(ret);
+    }
+
+    //readRegister8(MAX_3010X_ADDRESS, 0xFF);
+    uint8_t offset = 0xff;
+    ret = nrf_drv_twi_tx(&m_twi_master, MAX_3010X_ADDRESS, &offset, 1, false);
+    if (NRF_SUCCESS != ret) {
+      APP_ERROR_CHECK(ret);
+    }
+    uint8_t data;
+    ret = nrf_drv_twi_rx(&m_twi_master, MAX_3010X_ADDRESS, &data, sizeof(data));
+    NRF_LOG_INFO("read from max30101. data=%d and ret=%d", data, ret);
+        NRF_LOG_FLUSH();
+    if (NRF_SUCCESS != ret) {
+      APP_ERROR_CHECK(ret);
+    }
+
+////    writeRegister8(_i2caddr, MAX30105_LED1_PULSEAMP, amplitude);
+//    uint8_t dta_send[] = {0x0E, 0x0A};
+//    ret = nrf_drv_twi_tx(&m_twi_master, MAX_3010X_ADDRESS, dta_send, 2, false);
+//    if (NRF_SUCCESS != ret) {
+//      APP_ERROR_CHECK(ret);
+//    }
+
+}
+// ---------- MAX30101 END  ------
 
 void set_gpio_voltage_high(void) 
 {
@@ -1179,6 +1239,7 @@ int main(void)
 
     display_init();
     display_status("started");
+    max3010x_init();
 
     // Create a FreeRTOS task for the BLE stack.
     // The task will run advertising_start() before entering its loop.

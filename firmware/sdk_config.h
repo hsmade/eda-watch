@@ -1702,7 +1702,7 @@
 // <e> NRFX_CLOCK_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef NRFX_CLOCK_CONFIG_LOG_ENABLED
-#define NRFX_CLOCK_CONFIG_LOG_ENABLED 1
+#define NRFX_CLOCK_CONFIG_LOG_ENABLED 0
 #endif
 // <o> NRFX_CLOCK_CONFIG_LOG_LEVEL  - Default Severity level
  
@@ -4180,7 +4180,7 @@
  
 
 #ifndef NRFX_TWI1_ENABLED
-#define NRFX_TWI1_ENABLED 0
+#define NRFX_TWI1_ENABLED 1
 #endif
 
 // <o> NRFX_TWI_DEFAULT_CONFIG_FREQUENCY  - Frequency
@@ -4218,7 +4218,7 @@
 // <e> NRFX_TWI_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef NRFX_TWI_CONFIG_LOG_ENABLED
-#define NRFX_TWI_CONFIG_LOG_ENABLED 1
+#define NRFX_TWI_CONFIG_LOG_ENABLED 0
 #endif
 // <o> NRFX_TWI_CONFIG_LOG_LEVEL  - Default Severity level
  
@@ -5663,7 +5663,7 @@
 // <e> TWI1_ENABLED - Enable TWI1 instance
 //==========================================================
 #ifndef TWI1_ENABLED
-#define TWI1_ENABLED 0
+#define TWI1_ENABLED 1
 #endif
 // <q> TWI1_USE_EASY_DMA  - Use EasyDMA (if present)
  
@@ -8385,7 +8385,7 @@
 // <e> SAADC_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef SAADC_CONFIG_LOG_ENABLED
-#define SAADC_CONFIG_LOG_ENABLED 1
+#define SAADC_CONFIG_LOG_ENABLED 0
 #endif
 // <o> SAADC_CONFIG_LOG_LEVEL  - Default Severity level
  
@@ -8640,7 +8640,7 @@
 // <e> TWI_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef TWI_CONFIG_LOG_ENABLED
-#define TWI_CONFIG_LOG_ENABLED 1
+#define TWI_CONFIG_LOG_ENABLED 0
 #endif
 // <o> TWI_CONFIG_LOG_LEVEL  - Default Severity level
  
