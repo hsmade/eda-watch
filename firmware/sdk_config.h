@@ -4229,7 +4229,7 @@
 // <4=> Debug 
 
 #ifndef NRFX_TWI_CONFIG_LOG_LEVEL
-#define NRFX_TWI_CONFIG_LOG_LEVEL 4
+#define NRFX_TWI_CONFIG_LOG_LEVEL 3
 #endif
 
 // <o> NRFX_TWI_CONFIG_INFO_COLOR  - ANSI escape code prefix.
@@ -8651,7 +8651,7 @@
 // <4=> Debug 
 
 #ifndef TWI_CONFIG_LOG_LEVEL
-#define TWI_CONFIG_LOG_LEVEL 4
+#define TWI_CONFIG_LOG_LEVEL 3
 #endif
 
 // <o> TWI_CONFIG_INFO_COLOR  - ANSI escape code prefix.

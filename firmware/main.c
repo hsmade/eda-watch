@@ -157,6 +157,9 @@ static TimerHandle_t m_sensor_contact_timer;                        /**< Definit
 static TaskHandle_t m_logger_thread;                                /**< Definition of Logger thread. */
 #endif
 
+char current_status[SSD1306_LCDHEIGHT * SSD1306_LCDWIDTH];
+void display_status(char* text);
+
 static void advertising_start(void * p_erase_bonds);
 
 
@@ -1042,6 +1045,8 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
         battery_level_update(battery);
 
         NRF_LOG_INFO("batt: %d%%", battery);
+        sprintf(current_status, "event #%d\neda: %d\nbatt: %d",(int)m_adc_evt_counter, eda, battery);
+        display_status(&current_status[0]);
 				
         m_adc_evt_counter++;
     }
@@ -1088,74 +1093,43 @@ void saadc_init(void)
 // ---------- SAADC END ----------
 
 
-// ---------- DISPLAY TEST -------
-void testdrawline(void)
-{
-        for (int16_t i = 0; i < ssd1306_width(); i += 4) {
-                ssd1306_draw_line(0, 0, i, ssd1306_height() - 1, WHITE);
-                ssd1306_display();
-        }
-        for (int16_t i = 0; i < ssd1306_height(); i += 4) {
-                ssd1306_draw_line(0, 0, ssd1306_width() - 1, i, WHITE);
-                ssd1306_display();
-        }
-        nrf_delay_ms(250);
-
-        ssd1306_clear_display();
-        for (int16_t i = 0; i < ssd1306_width(); i += 4) {
-                ssd1306_draw_line(0, ssd1306_height() - 1, i, 0, WHITE);
-                ssd1306_display();
-        }
-        for (int16_t i = ssd1306_height() - 1; i >= 0; i -= 4) {
-                ssd1306_draw_line(0, ssd1306_height() - 1, ssd1306_width() - 1, i, WHITE);
-                ssd1306_display();
-        }
-        nrf_delay_ms(250);
-
-        ssd1306_clear_display();
-        for (int16_t i = ssd1306_width() - 1; i >= 0; i -= 4) {
-                ssd1306_draw_line(ssd1306_width() - 1, ssd1306_height() - 1, i, 0, WHITE);
-                ssd1306_display();
-        }
-        for (int16_t i = ssd1306_height() - 1; i >= 0; i -= 4) {
-                ssd1306_draw_line(ssd1306_width() - 1, ssd1306_height() - 1, 0, i, WHITE);
-                ssd1306_display();
-        }
-        nrf_delay_ms(250);
-
-        ssd1306_clear_display();
-        for (int16_t i = 0; i < ssd1306_height(); i += 4) {
-                ssd1306_draw_line(ssd1306_width() - 1, 0, 0, i, WHITE);
-                ssd1306_display();
-        }
-        for (int16_t i = 0; i < ssd1306_width(); i += 4) {
-                ssd1306_draw_line(ssd1306_width() - 1, 0, i, ssd1306_height() - 1, WHITE);
-                ssd1306_display();
-        }
-        nrf_delay_ms(250);
-
-        ssd1306_display();
-        nrf_delay_ms(250);
-        ssd1306_clear_display();
-}
-
-// ---------- DISPLAY TEST END -------
-
 void display_init(void) 
 {
-        nrf_gpio_cfg(
-                0,
-                NRF_GPIO_PIN_DIR_OUTPUT,
-                NRF_GPIO_PIN_INPUT_DISCONNECT,
-                NRF_GPIO_PIN_NOPULL,
-                NRF_GPIO_PIN_H0S1,
-                NRF_GPIO_PIN_NOSENSE);
-        ssd1306_init_i2c(SSD1306_CONFIG_SCL_PIN, SSD1306_CONFIG_SDA_PIN);
-        ssd1306_begin(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS, false);
+    nrf_gpio_cfg(
+            0,
+            NRF_GPIO_PIN_DIR_OUTPUT,
+            NRF_GPIO_PIN_INPUT_DISCONNECT,
+            NRF_GPIO_PIN_NOPULL,
+            NRF_GPIO_PIN_H0S1,
+            NRF_GPIO_PIN_NOSENSE);
+    ssd1306_init_i2c(SSD1306_CONFIG_SCL_PIN, SSD1306_CONFIG_SDA_PIN);
+    ssd1306_begin(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS, false);
 
-        nrf_delay_ms(1000);
-
+    nrf_delay_ms(1000);
 }
+
+void display_status(char* text)
+{
+    ssd1306_clear_display();
+    ssd1306_set_textsize(1);
+    ssd1306_set_textcolor(WHITE);
+    ssd1306_set_cursor(0, 0);
+    ssd1306_putstring(text);
+    ssd1306_display();
+}
+
+void set_gpio_voltage_high(void) 
+{
+    // J-Link>mem32 0x10001304,1
+    //   10001304 = 00000005 
+    if (NRF_UICR->REGOUT0 = 0xffffffff) {
+        NRF_LOG_INFO("Setting high voltage GPIO, register is %x", NRF_UICR->REGOUT0);
+        NRF_LOG_FLUSH();
+        nrf_nvmc_write_word((uint32_t) &NRF_UICR->REGOUT0, UICR_REGOUT0_VOUT_3V3 << UICR_REGOUT0_VOUT_Pos);
+        NVIC_SystemReset();
+    }
+}
+
 // -----------------------
 
 /**@brief Function for application main entry.
@@ -1204,7 +1178,7 @@ int main(void)
     saadc_sampling_event_enable();
 
     display_init();
-    testdrawline();
+    display_status("started");
 
     // Create a FreeRTOS task for the BLE stack.
     // The task will run advertising_start() before entering its loop.
