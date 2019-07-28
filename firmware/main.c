@@ -38,6 +38,19 @@
 
 #include "eda.h"
 
+// display
+#include "binary.h"
+#include "ssd1306.h"
+#include "nrf_drv_twi.h"
+#include "nrf_delay.h"
+#define SSD1306_CONFIG_SCL_PIN NRF_GPIO_PIN_MAP(1, 11)
+#define SSD1306_CONFIG_SDA_PIN NRF_GPIO_PIN_MAP(1, 10)
+
+
+// GPIO voltage set
+#include "nrf_nvmc.h"
+
+
 // SAADC START
 #include "nrf_soc.h"
 #include "nrf_drv_saadc.h"
@@ -1075,6 +1088,74 @@ void saadc_init(void)
 // ---------- SAADC END ----------
 
 
+// ---------- DISPLAY TEST -------
+void testdrawline(void)
+{
+        for (int16_t i = 0; i < ssd1306_width(); i += 4) {
+                ssd1306_draw_line(0, 0, i, ssd1306_height() - 1, WHITE);
+                ssd1306_display();
+        }
+        for (int16_t i = 0; i < ssd1306_height(); i += 4) {
+                ssd1306_draw_line(0, 0, ssd1306_width() - 1, i, WHITE);
+                ssd1306_display();
+        }
+        nrf_delay_ms(250);
+
+        ssd1306_clear_display();
+        for (int16_t i = 0; i < ssd1306_width(); i += 4) {
+                ssd1306_draw_line(0, ssd1306_height() - 1, i, 0, WHITE);
+                ssd1306_display();
+        }
+        for (int16_t i = ssd1306_height() - 1; i >= 0; i -= 4) {
+                ssd1306_draw_line(0, ssd1306_height() - 1, ssd1306_width() - 1, i, WHITE);
+                ssd1306_display();
+        }
+        nrf_delay_ms(250);
+
+        ssd1306_clear_display();
+        for (int16_t i = ssd1306_width() - 1; i >= 0; i -= 4) {
+                ssd1306_draw_line(ssd1306_width() - 1, ssd1306_height() - 1, i, 0, WHITE);
+                ssd1306_display();
+        }
+        for (int16_t i = ssd1306_height() - 1; i >= 0; i -= 4) {
+                ssd1306_draw_line(ssd1306_width() - 1, ssd1306_height() - 1, 0, i, WHITE);
+                ssd1306_display();
+        }
+        nrf_delay_ms(250);
+
+        ssd1306_clear_display();
+        for (int16_t i = 0; i < ssd1306_height(); i += 4) {
+                ssd1306_draw_line(ssd1306_width() - 1, 0, 0, i, WHITE);
+                ssd1306_display();
+        }
+        for (int16_t i = 0; i < ssd1306_width(); i += 4) {
+                ssd1306_draw_line(ssd1306_width() - 1, 0, i, ssd1306_height() - 1, WHITE);
+                ssd1306_display();
+        }
+        nrf_delay_ms(250);
+
+        ssd1306_display();
+        nrf_delay_ms(250);
+        ssd1306_clear_display();
+}
+
+// ---------- DISPLAY TEST END -------
+
+void display_init(void) 
+{
+        nrf_gpio_cfg(
+                0,
+                NRF_GPIO_PIN_DIR_OUTPUT,
+                NRF_GPIO_PIN_INPUT_DISCONNECT,
+                NRF_GPIO_PIN_NOPULL,
+                NRF_GPIO_PIN_H0S1,
+                NRF_GPIO_PIN_NOSENSE);
+        ssd1306_init_i2c(SSD1306_CONFIG_SCL_PIN, SSD1306_CONFIG_SDA_PIN);
+        ssd1306_begin(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS, false);
+
+        nrf_delay_ms(1000);
+
+}
 // -----------------------
 
 /**@brief Function for application main entry.
@@ -1122,6 +1203,8 @@ int main(void)
     saadc_init();
     saadc_sampling_event_enable();
 
+    display_init();
+    testdrawline();
 
     // Create a FreeRTOS task for the BLE stack.
     // The task will run advertising_start() before entering its loop.
