@@ -54,6 +54,10 @@
 // MAX30101
 #define MAX_3010X_ADDRESS 0x57
 
+
+// buzzer
+#define BUZZER_PORT NRF_GPIO_PIN_MAP(1,13)
+
 // SAADC START
 #include "nrf_soc.h"
 #include "nrf_drv_saadc.h"
@@ -1154,6 +1158,7 @@ void max3010x_init(void)
       APP_ERROR_CHECK(ret);
     }
 
+    // check that we are taking to an max3010x
     //readRegister8(MAX_3010X_ADDRESS, 0xFF);
     uint8_t offset = 0xff;
     ret = nrf_drv_twi_tx(&m_twi_master, MAX_3010X_ADDRESS, &offset, 1, false);
@@ -1191,6 +1196,21 @@ void set_gpio_voltage_high(void)
 }
 
 // -----------------------
+
+void buzzer_init(void)
+{
+  nrf_gpio_cfg_output(BUZZER_PORT);
+}
+
+void buzzer_pulse(uint32_t times) 
+{
+  do {
+    nrf_gpio_pin_set(BUZZER_PORT);
+    nrf_delay_ms(300);
+    nrf_gpio_pin_clear(BUZZER_PORT);
+    nrf_delay_ms(300);
+  } while (--times);
+}
 
 /**@brief Function for application main entry.
  */
@@ -1239,6 +1259,9 @@ int main(void)
 
     display_init();
     display_status("started");
+    buzzer_init();
+    nrf_delay_ms(300);
+    buzzer_pulse(3);
     max3010x_init();
 
     // Create a FreeRTOS task for the BLE stack.
